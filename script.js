@@ -37,6 +37,9 @@ function removeCartItem(clickedItem) {
   const cartItem = document.querySelector('.cart__item');
 
   if (dataTrashValue) {
+    const cartItemsFromLocalStorage = JSON.parse(getSavedCartItems());
+    const filteredCartItems = cartItemsFromLocalStorage.filter(({ id }) => id !== dataTrashValue);
+    saveCartItems(JSON.stringify(filteredCartItems));
     cartItem.remove();
   }
 }
