@@ -32,15 +32,28 @@ function getSkuFromProductItem(item) {
   return item.querySelector('span.item__sku').innerText;
 }
 
+const renderTotalPrice = (totalPrice) => {
+  const totalPriceItem = document.querySelector('.total-price');
+  totalPriceItem.textContent = `R$ ${totalPrice}`;
+};
+
+const setTotalPrice = () => {
+  const cartItemsFromLocalStorage = JSON.parse(getSavedCartItems());
+  const totalPrice = cartItemsFromLocalStorage.reduce((acc, { price }) => acc + price, 0);
+  localStorage.setItem('totalPrice', totalPrice);
+  renderTotalPrice(totalPrice);
+};
+
 function removeCartItem(clickedItem) {
   const dataTrashValue = clickedItem.dataset.trash;
-  const cartItem = document.querySelector('.cart__item');
+  const cartItem = clickedItem.parentNode;
 
   if (dataTrashValue) {
     const cartItemsFromLocalStorage = JSON.parse(getSavedCartItems());
     const filteredCartItems = cartItemsFromLocalStorage.filter(({ id }) => id !== dataTrashValue);
     saveCartItems(JSON.stringify(filteredCartItems));
     cartItem.remove();
+    setTotalPrice();
   }
 }
 
@@ -82,6 +95,7 @@ const setCartItem = async ({ target }) => {
   const { id, title, price } = await fetchItem(productId);
   const productCart = createCartItemElement({ id, title, price });
   saveCartItemAtLocalStorage({ id, title, price });
+  setTotalPrice();
   cartItems.appendChild(productCart);
 };
 
@@ -102,6 +116,7 @@ const renderAllProducts = async () => {
 const initialRenderization = () => {
   if (getSavedCartItems() === null) {
     saveCartItems(JSON.stringify([]));
+    localStorage.setItem('totalPrice', 0);
   } else {
     const localStorageCartItems = JSON.parse(getSavedCartItems());
     localStorageCartItems
@@ -109,6 +124,8 @@ const initialRenderization = () => {
         const productCartLocalStorage = createCartItemElement({ id, price, title });
         cartItems.appendChild(productCartLocalStorage);
       });
+    const localStorageTotalPrice = JSON.parse(localStorage.getItem('totalPrice'));
+    renderTotalPrice(localStorageTotalPrice);
   }
 };
 
