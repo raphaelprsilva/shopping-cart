@@ -113,6 +113,19 @@ const renderAllProducts = async () => {
   await addProductToCart();
 };
 
+const clearCartItems = () => {
+  const emptyCartButton = document.querySelector('.empty-cart');
+  const allCartItems = document.querySelectorAll('.cart__item');
+
+  emptyCartButton.addEventListener('click', () => {
+    allCartItems.forEach((cartItem) => cartItem.remove());
+    saveCartItems(JSON.stringify([]));
+    localStorage.setItem('totalPrice', 0);
+    const getTotalPrice = localStorage.getItem('totalPrice');
+    renderTotalPrice(getTotalPrice);
+  });
+};
+
 const initialRenderization = () => {
   if (getSavedCartItems() === null) {
     saveCartItems(JSON.stringify([]));
@@ -132,4 +145,5 @@ const initialRenderization = () => {
 window.onload = async () => {
   initialRenderization();
   renderAllProducts();
+  clearCartItems();
 };
