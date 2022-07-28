@@ -142,8 +142,26 @@ const initialRenderization = () => {
   }
 };
 
+const load = () => {
+  const loadElement = document.createElement('div');
+  loadElement.classList.add('loading');
+  loadElement.innerText = 'Carregando...';
+  document.querySelector('.items').appendChild(loadElement);
+};
+
+load();
+
+const stopLoad = () => {
+  document.querySelector('.loading').remove();
+};
+
+const loadHelper = (callback) => {
+  setTimeout(callback, 1500);
+};
+
 window.onload = async () => {
   initialRenderization();
-  renderAllProducts();
+  loadHelper(renderAllProducts);
+  loadHelper(stopLoad);
   clearCartItems();
 };
