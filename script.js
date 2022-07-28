@@ -32,8 +32,18 @@ function getSkuFromProductItem(item) {
   return item.querySelector('span.item__sku').innerText;
 }
 
+function removeCartItem(clickedItem) {
+  const dataTrashValue = clickedItem.dataset.trash;
+  const cartItem = document.querySelector('.cart__item');
+
+  if (dataTrashValue) {
+    cartItem.remove();
+  }
+}
+
 function cartItemClickListener(event) {
-  // coloque seu código aqui
+  const clickedItem = event.target;
+  removeCartItem(clickedItem);
 }
 
 function createCartItemElement({ id: sku, title: name, price: salePrice }) {
@@ -43,6 +53,10 @@ function createCartItemElement({ id: sku, title: name, price: salePrice }) {
   li.appendChild(createCustomElement('span', 'item__sku', sku));
   li.appendChild(createCustomElement('span', 'item__title', name));
   li.appendChild(createCustomElement('span', 'item__price', `R$ ${salePrice}`));
+
+  const deleteProductIcon = createCustomElement('i', 'far fa-trash-alt', '');
+  deleteProductIcon.dataset.trash = sku;
+  li.appendChild(deleteProductIcon);
   li.addEventListener('click', cartItemClickListener);
   return li;
 }
