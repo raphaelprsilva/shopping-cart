@@ -102,6 +102,23 @@ body {
   box-sizing: border-box;
 }
 
+.cart__item {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  margin: 8px;
+  border-radius: 5px;
+  border: 2px solid rgb(171, 210, 176);
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.cart__item .item__sku {
+  display: none;
+}
+
 .item .item__sku {
   display: none;
 }
