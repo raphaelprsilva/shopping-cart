@@ -67,18 +67,24 @@ const setProductsProperties = (products, elementToAppend) =>
     elementToAppend.appendChild(newItemElement);
   });
 
+const saveCartItemAtLocalStorage = ({ id, title, price }) => {
+  const cartItemsFromLocalStorage = JSON.parse(getSavedCartItems());
+  cartItemsFromLocalStorage.push({ id, title, price });
+  saveCartItems(JSON.stringify(cartItemsFromLocalStorage));
+};
+
 const setCartItem = async ({ target }) => {
   const productComponent = target.parentNode;
   const productId = getSkuFromProductItem(productComponent);
   const { id, title, price } = await fetchItem(productId);
   const productCart = createCartItemElement({ id, title, price });
+  saveCartItemAtLocalStorage({ id, title, price });
   cartItems.appendChild(productCart);
 };
 
 const addProductToCart = async () => {
   const addProductButtons = document.querySelectorAll('.item__add');
-  addProductButtons.forEach((button) =>
-    button.addEventListener('click', setCartItem));
+  addProductButtons.forEach((button) => button.addEventListener('click', setCartItem));
 };
 
 const renderAllProducts = async () => {
@@ -90,6 +96,20 @@ const renderAllProducts = async () => {
   await addProductToCart();
 };
 
+const initialRenderization = () => {
+  if (getSavedCartItems() === null) {
+    saveCartItems(JSON.stringify([]));
+  } else {
+    const localStorageCartItems = JSON.parse(getSavedCartItems());
+    localStorageCartItems
+      .forEach(({ id, price, title }) => {
+        const productCartLocalStorage = createCartItemElement({ id, price, title });
+        cartItems.appendChild(productCartLocalStorage);
+      });
+  }
+};
+
 window.onload = async () => {
+  initialRenderization();
   renderAllProducts();
 };
