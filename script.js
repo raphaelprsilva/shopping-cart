@@ -153,9 +153,9 @@ const renderAllProducts = async () => {
 
 const clearCartItems = () => {
   const emptyCartButton = document.querySelector('.empty-cart');
-  const allCartItems = document.querySelectorAll('.cart__item');
-
+  
   emptyCartButton.addEventListener('click', () => {
+    const allCartItems = document.querySelectorAll('.cart__item');
     allCartItems.forEach((cartItem) => cartItem.remove());
     saveCartItems(JSON.stringify([]));
     localStorage.setItem('totalPrice', 0);
