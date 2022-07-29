@@ -42,7 +42,8 @@ const renderTotalPrice = (totalPrice) => {
 
 const setTotalPrice = () => {
   const cartItemsFromLocalStorage = JSON.parse(getSavedCartItems());
-  const totalPrice = cartItemsFromLocalStorage.reduce((acc, { price }) => acc + price, 0);
+  const totalPrice = cartItemsFromLocalStorage
+    .reduce((acc, { price, quantity }) => acc + (price * quantity), 0);
   const roundedTotalPrice = Math.round(totalPrice * 100) / 100;
   const convertedTotalPrice = setNewPrice(roundedTotalPrice);
   localStorage.setItem('totalPrice', convertedTotalPrice);
@@ -67,13 +68,15 @@ function cartItemClickListener(event) {
   removeCartItem(clickedItem);
 }
 
-function createCartItemElement({ id: sku, title: name, price: salePrice }) {
+function createCartItemElement({ id: sku, title: name, price: salePrice, quantity }) {
   const newPriceNotation = setNewPrice(salePrice);
   const li = document.createElement('li');
   li.className = 'cart__item';
+  li.dataset.id = sku;
 
   li.appendChild(createCustomElement('span', 'item__sku', sku));
   li.appendChild(createCustomElement('span', 'item__title', name));
+  li.appendChild(createCustomElement('span', 'item__quantity', `Quantidade: ${quantity}`));
   li.appendChild(createCustomElement('span', 'item__price', `R$ ${newPriceNotation}`));
 
   const deleteProductIcon = createCustomElement('i', 'far fa-trash-alt', '');
@@ -91,20 +94,47 @@ const setProductsProperties = (products, elementToAppend) =>
     elementToAppend.appendChild(newItemElement);
   });
 
-const saveCartItemAtLocalStorage = ({ id, title, price }) => {
+const saveCartItemAtLocalStorage = ({ id, title, price, quantity }) => {
   const cartItemsFromLocalStorage = JSON.parse(getSavedCartItems());
-  cartItemsFromLocalStorage.push({ id, title, price });
+  cartItemsFromLocalStorage.push({ id, title, price, quantity });
   saveCartItems(JSON.stringify(cartItemsFromLocalStorage));
+};
+
+const updateProductsCartQuantity = (products, productId) => products.map((product) => {
+  if (product.id === productId) return { ...product, quantity: product.quantity + 1 };
+  return product;
+});
+
+const updatedProductCart = (products, productId) => {
+  const updatedProducts = updateProductsCartQuantity(products, productId);
+  const { id, price, quantity } = updatedProducts.find((product) => product.id === productId);
+  const totalPrice = price * quantity;
+  const elementToReRender = document.querySelector(`[data-id=${id}]`);
+  elementToReRender.querySelector('.item__quantity').textContent = `Quantidade: ${quantity}`;
+  elementToReRender.querySelector('.item__price').textContent = `Total: R$ ${totalPrice}`;
+  saveCartItems(JSON.stringify(updatedProducts));
+  setTotalPrice();
+};
+
+const saveProductCartItem = async (productId) => {
+  const { id, title, price, quantity = 1 } = await fetchItem(productId);
+  const productCart = createCartItemElement({ id, title, price, quantity });
+  saveCartItemAtLocalStorage({ id, title, price, quantity });
+  setTotalPrice();
+  cartItems.appendChild(productCart);
 };
 
 const setCartItem = async ({ target }) => {
   const productComponent = target.parentNode;
   const productId = getSkuFromProductItem(productComponent);
-  const { id, title, price } = await fetchItem(productId);
-  const productCart = createCartItemElement({ id, title, price });
-  saveCartItemAtLocalStorage({ id, title, price });
-  setTotalPrice();
-  cartItems.appendChild(productCart);
+  const cartItemsFromLocalStorage = JSON.parse(getSavedCartItems());
+  const isProductAlreadyExists = cartItemsFromLocalStorage
+    .some((product) => product.id === productId);
+  if (isProductAlreadyExists) {
+    updatedProductCart(cartItemsFromLocalStorage, productId);
+  } else {
+    saveProductCartItem(productId);
+  }
 };
 
 const addProductToCart = async () => {
@@ -141,8 +171,8 @@ const initialRenderization = () => {
   } else {
     const localStorageCartItems = JSON.parse(getSavedCartItems());
     localStorageCartItems
-      .forEach(({ id, price, title }) => {
-        const productCartLocalStorage = createCartItemElement({ id, price, title });
+      .forEach(({ id, price, title, quantity }) => {
+        const productCartLocalStorage = createCartItemElement({ id, price, title, quantity });
         cartItems.appendChild(productCartLocalStorage);
       });
     const localStorageTotalPrice = localStorage.getItem('totalPrice');
