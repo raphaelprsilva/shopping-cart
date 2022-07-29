@@ -1,5 +1,7 @@
 const cartItems = document.querySelector('.cart__items');
 
+const setNewPrice = (price) => price.toString().replace('.', ',');
+
 function createProductImageElement(imageSource) {
   const img = document.createElement('img');
   img.className = 'item__image';
@@ -14,12 +16,13 @@ function createCustomElement(element, className, innerText) {
   return e;
 }
 
-function createProductItemElement({ id: sku, title: name, thumbnail: image }) {
+function createProductItemElement({ id: sku, title: name, thumbnail: image, price }) {
   const section = document.createElement('section');
   section.className = 'item';
 
   section.appendChild(createCustomElement('span', 'item__sku', sku));
   section.appendChild(createCustomElement('span', 'item__title', name));
+  section.appendChild(createCustomElement('span', 'item__price', `R$ ${price}`));
   section.appendChild(createProductImageElement(image));
   section.appendChild(
     createCustomElement('button', 'item__add', 'Adicionar ao carrinho!'),
@@ -40,8 +43,10 @@ const renderTotalPrice = (totalPrice) => {
 const setTotalPrice = () => {
   const cartItemsFromLocalStorage = JSON.parse(getSavedCartItems());
   const totalPrice = cartItemsFromLocalStorage.reduce((acc, { price }) => acc + price, 0);
-  localStorage.setItem('totalPrice', totalPrice);
-  renderTotalPrice(totalPrice);
+  const roundedTotalPrice = Math.round(totalPrice * 100) / 100;
+  const convertedTotalPrice = setNewPrice(roundedTotalPrice);
+  localStorage.setItem('totalPrice', convertedTotalPrice);
+  renderTotalPrice(convertedTotalPrice);
 };
 
 function removeCartItem(clickedItem) {
@@ -63,12 +68,13 @@ function cartItemClickListener(event) {
 }
 
 function createCartItemElement({ id: sku, title: name, price: salePrice }) {
+  const newPriceNotation = setNewPrice(salePrice);
   const li = document.createElement('li');
   li.className = 'cart__item';
 
   li.appendChild(createCustomElement('span', 'item__sku', sku));
   li.appendChild(createCustomElement('span', 'item__title', name));
-  li.appendChild(createCustomElement('span', 'item__price', `R$ ${salePrice}`));
+  li.appendChild(createCustomElement('span', 'item__price', `R$ ${newPriceNotation}`));
 
   const deleteProductIcon = createCustomElement('i', 'far fa-trash-alt', '');
   deleteProductIcon.dataset.trash = sku;
@@ -78,8 +84,10 @@ function createCartItemElement({ id: sku, title: name, price: salePrice }) {
 }
 
 const setProductsProperties = (products, elementToAppend) =>
-  products.forEach(({ id, title, thumbnail }) => {
-    const newItemElement = createProductItemElement({ id, title, thumbnail });
+  products.forEach(({ id, title, thumbnail, price }) => {
+    const brazilizanPriceNotation = setNewPrice(price);
+    const product = { id, title, thumbnail, price: brazilizanPriceNotation };
+    const newItemElement = createProductItemElement(product);
     elementToAppend.appendChild(newItemElement);
   });
 
@@ -137,7 +145,7 @@ const initialRenderization = () => {
         const productCartLocalStorage = createCartItemElement({ id, price, title });
         cartItems.appendChild(productCartLocalStorage);
       });
-    const localStorageTotalPrice = JSON.parse(localStorage.getItem('totalPrice'));
+    const localStorageTotalPrice = localStorage.getItem('totalPrice');
     renderTotalPrice(localStorageTotalPrice);
   }
 };
